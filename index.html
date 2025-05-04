@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Оформление заказа</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    .item button {
+      margin: 0 5px;
+    }
+    .total {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Выберите товары</h2>
+  <div id="items"></div>
+  <div class="total" id="total"></div>
+  <button onclick="sendOrder()">📦 Отправить заказ</button>
+
+  <script>
+    const items = [
+      { id: 1, name: '🍎 Яблоки', price: 100, qty: 0 },
+      { id: 2, name: '🥕 Морковь', price: 50, qty: 0 },
+      { id: 3, name: '🍌 Бананы', price: 80, qty: 0 },
+    ];
+
+    function render() {
+      const container = document.getElementById('items');
+      container.innerHTML = '';
+      let total = 0;
+
+      items.forEach(item => {
+        total += item.qty * item.price;
+
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <div>${item.name} — ${item.price}₽/кг</div>
+          <div>
+            <button onclick="changeQty(${item.id}, -1)">➖</button>
+            <span>${item.qty}</span>
+            <button onclick="changeQty(${item.id}, 1)">➕</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('total').innerText = `Сумма: ${total}₽`;
+    }
+
+    function changeQty(id, delta) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      item.qty = Math.max(0, item.qty + delta);
+      render();
+    }
+
+    function sendOrder() {
+      const order = items.filter(i => i.qty > 0);
+      const total = order.reduce((sum, i) => sum + i.qty * i.price, 0);
+      const data = {
+        items: order,
+        total,
+      };
+      Telegram.WebApp.sendData(JSON.stringify(data));
+    }
+
+    // Telegram API init
+    Telegram.WebApp.ready();
+    render();
+  </script>
+</body>
+</html>
